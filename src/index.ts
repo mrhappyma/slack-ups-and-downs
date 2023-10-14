@@ -1,5 +1,6 @@
-import { App } from "@slack/bolt";
-import env from "./utils/env";
+import bolt from "@slack/bolt";
+const { App } = bolt;
+import env from "./utils/env.js";
 import { PrismaClient, Team } from "@prisma/client";
 
 const app = new App({

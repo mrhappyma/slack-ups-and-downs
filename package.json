@@ -5,9 +5,14 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "prisma": "^5.4.2"
+    "prisma": "^5.4.2",
+    "typescript": "^5.2.2"
   },
   "prisma": {
     "seed": "bun run prisma/seed.ts"
-  }
+  },
+  "scripts": {
+    "postinstall": "prisma generate"
+  },
+  "type": "module"
 }
