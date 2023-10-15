@@ -18,7 +18,7 @@ app.event("app_mention", async ({ event, client }) => {
 });
 
 let game = await prisma.game.findFirstOrThrow();
-app.message(/^-?\d+$/, async ({ message, say, client }) => {
+app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
   if (message.channel != env.CHANNEL_ID) return;
   if (
     !(
