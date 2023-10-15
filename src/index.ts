@@ -104,8 +104,18 @@ app.message(/^-?\d+$/, async ({ message, say, client }) => {
 
 app.command("/team", async ({ command, ack, respond }) => {
   await ack();
-  const team = await getTeam(command.user_id, false);
-  await respond("You're on team " + team + "!");
+  if (!command.text) {
+    const team = await getTeam(command.user_id, false);
+    await respond("You're on team " + team + "!");
+  } else {
+    const regexId = command.text.match(/<@([UW][A-Z0-9]+)\|/);
+    if (!regexId) {
+      await respond("Invalid user");
+      return;
+    }
+    const team = await getTeam(regexId[1]);
+    await respond("That person is on team " + team + "!");
+  }
 });
 
 app.event("member_joined_channel", async ({ event }) => {

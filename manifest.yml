@@ -1,5 +1,13 @@
 display_information:
   name: ups and downs
+  description: "overlord of #up-vs-down"
+  background_color: "#000000"
+  long_description:
+    "a fun little bot to manage #up-vs-down. fun fact, did you know, slack app descriptions have to be at least 175 characters long\r
+
+    \r
+
+    https://github.com/mrhappyma/slack-ups-and-downs"
 features:
   bot_user:
     display_name: ups and downs
@@ -7,7 +15,8 @@ features:
   slash_commands:
     - command: /team
       description: find out what team you're on
-      should_escape: false
+      usage_hint: "[optionally, another user]"
+      should_escape: true
 oauth_config:
   scopes:
     bot:
