@@ -189,19 +189,18 @@ const youScrewedUp = async (
     });
     return;
   } else {
+    const newNumber = team == "UP" ? game.number - 5 : game.number + 5;
     say({
-      text: `${reason}\nAs punishment for your wrongdoing I'm moving the game 5 points in the other direction. Counting resumes from ${
-        team == "UP" ? game.number - 5 : game.number + 5
-      }, meaning the next number is ${game.number - 4} or ${
-        game.number + 6
-      } depending on your team.`,
+      text: `${reason}\nAs punishment for your wrongdoing I'm moving the game 5 points in the other direction. Counting resumes from ${newNumber}, meaning the next number is ${
+        newNumber - 1
+      } or ${newNumber + 1} depending on your team.`,
     });
     game = await prisma.game.update({
       where: {
         id: game.id,
       },
       data: {
-        number: team == "UP" ? game.number - 5 : game.number + 5,
+        number: newNumber,
       },
     });
     return;
