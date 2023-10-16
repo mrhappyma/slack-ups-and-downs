@@ -32,31 +32,21 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
   const team = await getTeam(message.user!);
   const num = parseInt(message.text!);
   const target = team == "UP" ? game.number + 1 : game.number - 1;
-  if (num != target) {
-    client.reactions.add({
-      channel: message.channel,
-      timestamp: message.ts,
-      name: "bangbang",
-    });
-    client.chat.postEphemeral({
-      channel: message.channel,
-      user: message.user!,
-      text:
-        "You're on team " + team + ", so the next number is " + target + ".",
-    });
+  if (message.user == game.lastCounter) {
+    youScrewedUp(message, say, team, "You can't count twice in a row!");
     return;
   }
-  if (message.user == game.lastCounter) {
-    client.reactions.add({
-      channel: message.channel,
-      timestamp: message.ts,
-      name: "bangbang",
-    });
-    client.chat.postEphemeral({
-      channel: message.channel,
-      user: message.user!,
-      text: "You can't count twice in a row!",
-    });
+  if (num != target) {
+    youScrewedUp(
+      message,
+      say,
+      team,
+      "That's not the right number! You're on team " +
+        team +
+        ", so the next number should have been " +
+        target +
+        "."
+    );
     return;
   }
   game = await prisma.game.update({
@@ -163,6 +153,57 @@ const getTeam = async (id: string, notifyOnCreate = true) => {
     });
   }
   return team;
+};
+
+const youScrewedUp = async (
+  message:
+    | bolt.GenericMessageEvent
+    | bolt.BotMessageEvent
+    | bolt.FileShareMessageEvent
+    | bolt.ThreadBroadcastMessageEvent,
+  say: bolt.SayFn,
+  team: Team,
+  reason: string
+) => {
+  app.client.reactions.add({
+    channel: message.channel,
+    timestamp: message.ts,
+    name: "bangbang",
+  });
+  const user = await prisma.user.findUnique({
+    where: {
+      id: message.user!,
+    },
+  });
+  if (!user?.usedGrace) {
+    say({
+      text: `${reason}\nSince this is your first time screwing up, I'll let you off with a warning. Don't let it happen again!`,
+    });
+    await prisma.user.update({
+      where: {
+        id: message.user!,
+      },
+      data: {
+        usedGrace: true,
+      },
+    });
+    return;
+  } else {
+    say({
+      text: `${reason}\nAs punishment for your wrongdoing I'm moving the game 5 points in the other direction. Counting resumes from ${
+        team == "UP" ? game.number - 5 : game.number + 5
+      }.`,
+    });
+    game = await prisma.game.update({
+      where: {
+        id: game.id,
+      },
+      data: {
+        number: team == "UP" ? game.number - 5 : game.number + 5,
+      },
+    });
+    return;
+  }
 };
 
 app.start(3000);

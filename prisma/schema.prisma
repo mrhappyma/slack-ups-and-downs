@@ -16,8 +16,9 @@ enum Team {
 }
 
 model User {
-  id   String @id @unique
-  team Team
+  id        String  @id @unique
+  team      Team
+  usedGrace Boolean @default(false)
 }
 
 model Game {
