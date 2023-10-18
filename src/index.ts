@@ -17,22 +17,23 @@ app.event("app_mention", async ({ event, client }) => {
   });
 });
 
-let game = await prisma.game.findFirstOrThrow();
+const game = await prisma.game.findFirstOrThrow();
+const id = game.id;
+let number = game.number;
+let lastCounter = game.lastCounter;
+let upTeamMembers = game.upTeamMembers;
+let downTeamMembers = game.downTeamMembers;
+let upTeamWins = game.upTeamWins;
+let downTeamWins = game.downTeamWins;
+
 app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
   if (message.channel != env.CHANNEL_ID) return;
-  if (
-    !(
-      message.subtype === undefined ||
-      message.subtype === "bot_message" ||
-      message.subtype === "file_share" ||
-      message.subtype === "thread_broadcast"
-    )
-  )
-    return;
+  if (!(message.subtype === undefined)) return;
+  if (message.thread_ts) return;
   const team = await getTeam(message.user!);
   const num = parseInt(message.text!);
-  const target = team == "UP" ? game.number + 1 : game.number - 1;
-  if (message.user == game.lastCounter) {
+  const target = team == "UP" ? number + 1 : number - 1;
+  if (message.user == lastCounter) {
     youScrewedUp(message, say, team, "You can't count twice in a row!");
     return;
   }
@@ -49,9 +50,11 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
     );
     return;
   }
-  game = await prisma.game.update({
+  number = target;
+  lastCounter = message.user ?? null;
+  await prisma.game.update({
     where: {
-      id: game.id,
+      id,
     },
     data: {
       number: target,
@@ -59,35 +62,41 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
     },
   });
   if (target == 100) {
-    game = await prisma.game.update({
+    number = 0;
+    lastCounter = null;
+    upTeamWins++;
+    await prisma.game.update({
       where: {
-        id: game.id,
+        id,
       },
       data: {
         number: 0,
         lastCounter: null,
-        upTeamWins: game.upTeamWins + 1,
+        upTeamWins: upTeamWins + 1,
       },
     });
     client.chat.postMessage({
       channel: message.channel,
-      text: `And that's a win for team UP! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\nUP team wins: ${game.upTeamWins}\nDOWN team wins: ${game.downTeamWins}`,
+      text: `And that's a win for team UP! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\nUP team wins: ${upTeamWins}\nDOWN team wins: ${downTeamWins}`,
     });
   }
   if (target == -100) {
-    game = await prisma.game.update({
+    number = 0;
+    lastCounter = null;
+    downTeamWins++;
+    await prisma.game.update({
       where: {
-        id: game.id,
+        id,
       },
       data: {
         number: 0,
         lastCounter: null,
-        downTeamWins: game.downTeamWins + 1,
+        downTeamWins: downTeamWins + 1,
       },
     });
     client.chat.postMessage({
       channel: message.channel,
-      text: `And that's a win for team DOWN! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\nUP team wins: ${game.upTeamWins}\nDOWN team wins: ${game.downTeamWins}`,
+      text: `And that's a win for team DOWN! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\nUP team wins: ${upTeamWins}\nDOWN team wins: ${downTeamWins}`,
     });
   }
 });
@@ -112,43 +121,44 @@ app.event("member_joined_channel", async ({ event }) => {
   getTeam(event.user);
 });
 
-const getTeam = async (id: string, notifyOnCreate = true) => {
+const getTeam = async (uid: string, notifyOnCreate = true) => {
   const user = await prisma.user.findUnique({
     where: {
-      id,
+      id: uid,
     },
   });
   if (user) return user.team;
   let team: Team;
-  if (game.upTeamMembers > game.downTeamMembers) {
+  if (upTeamMembers > downTeamMembers) {
     team = "DOWN";
-  } else if (game.upTeamMembers < game.downTeamMembers) {
+  } else if (upTeamMembers < downTeamMembers) {
     team = "UP";
   } else {
     const num = Math.floor(Math.random() * 2);
     team = num == 0 ? "UP" : "DOWN";
   }
-  game = await prisma.game.update({
+  upTeamMembers = team == "UP" ? upTeamMembers + 1 : upTeamMembers;
+  downTeamMembers = team == "DOWN" ? downTeamMembers + 1 : downTeamMembers;
+  await prisma.game.update({
     where: {
-      id: game.id,
+      id,
     },
     data: {
-      upTeamMembers: team == "UP" ? game.upTeamMembers + 1 : game.upTeamMembers,
-      downTeamMembers:
-        team == "DOWN" ? game.downTeamMembers + 1 : game.downTeamMembers,
+      upTeamMembers: team == "UP" ? upTeamMembers + 1 : upTeamMembers,
+      downTeamMembers: team == "DOWN" ? downTeamMembers + 1 : downTeamMembers,
     },
   });
 
   await prisma.user.create({
     data: {
-      id,
+      id: uid,
       team,
     },
   });
   if (notifyOnCreate) {
     app.client.chat.postEphemeral({
       channel: env.CHANNEL_ID,
-      user: id,
+      user: uid,
       text: "You're on team " + team + "!",
     });
   }
@@ -189,15 +199,16 @@ const youScrewedUp = async (
     });
     return;
   } else {
-    const newNumber = team == "UP" ? game.number - 5 : game.number + 5;
+    const newNumber = team == "UP" ? number - 5 : number + 5;
     say({
       text: `${reason}\nAs punishment for your wrongdoing I'm moving the game 5 points in the other direction. Counting resumes from ${newNumber}, meaning the next number is ${
         newNumber - 1
       } or ${newNumber + 1} depending on your team.`,
     });
-    game = await prisma.game.update({
+    number = newNumber;
+    await prisma.game.update({
       where: {
-        id: game.id,
+        id,
       },
       data: {
         number: newNumber,
