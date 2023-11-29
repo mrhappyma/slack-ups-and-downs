@@ -9,17 +9,16 @@ display_information:
 
     https://github.com/mrhappyma/slack-ups-and-downs"
 features:
-  bot_user:
-    display_name: ups and downs
-    always_online: true
+  app_home:
+    home_tab_enabled: true
+    messages_tab_enabled: false
+    messages_tab_read_only_enabled: true
   slash_commands:
     - command: /team
-      url: https://2dfc-98-117-240-132.ngrok-free.app/slack/events
       description: find out what team you're on
       usage_hint: "[optionally, another user]"
       should_escape: true
     - command: /leaderboard
-      url: https://2dfc-98-117-240-132.ngrok-free.app/slack/events
       description: view the up-vs-down leaderboard
       should_escape: false
   scopes:
@@ -37,6 +36,7 @@ features:
 settings:
   event_subscriptions:
     bot_events:
+      - app_home_opened
       - app_mention
       - member_joined_channel
       - message.channels

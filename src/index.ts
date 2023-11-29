@@ -133,9 +133,7 @@ app.event("member_joined_channel", async ({ event }) => {
   getTeam(event.user);
 });
 
-app.command("/leaderboard", async ({ command, ack, respond }) => {
-  await ack();
-
+const getTheLeadersOfTheBoard = async (userId: string) => {
   const blocks: (bolt.Block | bolt.KnownBlock)[] = [
     {
       type: "header",
@@ -147,8 +145,23 @@ app.command("/leaderboard", async ({ command, ack, respond }) => {
         emoji: true,
       },
     },
+    {
+      type: "section",
+      fields: [
+        {
+          type: "mrkdwn",
+          text: `*UP* team wins: ${upTeamWins}`,
+        },
+        {
+          type: "mrkdwn",
+          text: `*DOWN* team wins: ${downTeamWins}`,
+        },
+      ],
+    },
+    {
+      type: "divider",
+    },
   ];
-
   const users = await prisma.user.findMany({
     orderBy: {
       countsThisMonth: "desc",
@@ -161,7 +174,7 @@ app.command("/leaderboard", async ({ command, ack, respond }) => {
     if (pos > 10) break;
 
     let bold = false;
-    if (user.id == command.user_id) {
+    if (user.id == userId) {
       bold = true;
       addedFetcher = true;
     }
@@ -178,8 +191,8 @@ app.command("/leaderboard", async ({ command, ack, respond }) => {
   }
 
   if (!addedFetcher) {
-    const fetcher = users.find((user) => user.id == command.user_id);
-    if (!fetcher) return await respond({ blocks });
+    const fetcher = users.find((user) => user.id == userId);
+    if (!fetcher) return blocks;
     blocks.push({
       type: "divider",
     });
@@ -187,14 +200,30 @@ app.command("/leaderboard", async ({ command, ack, respond }) => {
       type: "section",
       text: {
         type: "mrkdwn",
-        text: `*${users.indexOf(fetcher) + 1}. <@${command.user_id}> - ${
+        text: `*${users.indexOf(fetcher) + 1}. <@${fetcher.id}> - ${
           fetcher?.countsThisMonth
         } for team ${fetcher?.team}*`,
       },
     });
   }
+  return blocks;
+};
 
+app.command("/leaderboard", async ({ command, ack, respond }) => {
+  await ack();
+  const blocks = await getTheLeadersOfTheBoard(command.user_id);
   return await respond({ blocks });
+});
+
+app.event("app_home_opened", async ({ event, client }) => {
+  const blocks = await getTheLeadersOfTheBoard(event.user);
+  client.views.publish({
+    user_id: event.user,
+    view: {
+      type: "home",
+      blocks,
+    },
+  });
 });
 
 const resetLeaderboard = async () => {
