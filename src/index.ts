@@ -2,6 +2,7 @@ import bolt from "@slack/bolt";
 const { App } = bolt;
 import env from "./utils/env.js";
 import { PrismaClient, Team } from "@prisma/client";
+import Cron from "croner";
 
 const app = new App({
   token: env.WORKSPACE_BOT_TOKEN,
@@ -61,6 +62,17 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
       lastCounter: message.user,
     },
   });
+  await prisma.user.update({
+    where: {
+      id: message.user,
+    },
+    data: {
+      countsThisMonth: {
+        increment: 1,
+      },
+    },
+  });
+
   if (target == 100) {
     number = 0;
     lastCounter = null;
@@ -120,6 +132,86 @@ app.command("/team", async ({ command, ack, respond }) => {
 app.event("member_joined_channel", async ({ event }) => {
   getTeam(event.user);
 });
+
+app.command("/leaderboard", async ({ command, ack, respond }) => {
+  await ack();
+
+  const blocks: (bolt.Block | bolt.KnownBlock)[] = [
+    {
+      type: "header",
+      text: {
+        type: "plain_text",
+        text: `<#${env.CHANNEL_ID}> Leaderboard - ${new Date().toLocaleString(
+          "en-us",
+          { month: "long" }
+        )} ${new Date().getFullYear()}`,
+        emoji: true,
+      },
+    },
+  ];
+
+  const users = await prisma.user.findMany({
+    orderBy: {
+      countsThisMonth: "desc",
+    },
+  });
+  let pos = 0;
+  let addedFetcher = false;
+  for (const user of users) {
+    pos++;
+    if (pos > 10) break;
+
+    let bold = false;
+    if (user.id == command.user_id) {
+      bold = true;
+      addedFetcher = true;
+    }
+    if (pos == 1) bold = true;
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: bold
+          ? `*${pos}. <@${user.id}> - ${user.countsThisMonth} for team ${user.team}*`
+          : `${pos}. <@${user.id}> - ${user.countsThisMonth} for team ${user.team}`,
+      },
+    });
+  }
+
+  if (!addedFetcher) {
+    const fetcher = users.find((user) => user.id == command.user_id);
+    if (!fetcher) return await respond({ blocks });
+    blocks.push({
+      type: "divider",
+    });
+    blocks.push({
+      type: "section",
+      text: {
+        type: "mrkdwn",
+        text: `*${users.indexOf(fetcher) + 1}. <@${command.user_id}> - ${
+          fetcher?.countsThisMonth
+        } for team ${fetcher?.team}*`,
+      },
+    });
+  }
+
+  return await respond({ blocks });
+});
+
+const resetLeaderboard = async () => {
+  await prisma.user.updateMany({
+    data: {
+      countsThisMonth: 0,
+    },
+  });
+  await app.client.chat.postMessage({
+    channel: env.CHANNEL_ID,
+    text: `Leaderboard reset! Happy ${new Date().toLocaleString("en-us", {
+      month: "long",
+    })}!`,
+  });
+};
+Cron("0 0 1 * *", resetLeaderboard);
 
 const getTeam = async (uid: string, notifyOnCreate = true) => {
   const user = await prisma.user.findUnique({

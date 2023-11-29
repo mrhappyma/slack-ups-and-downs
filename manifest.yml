@@ -11,13 +11,17 @@ display_information:
 features:
   bot_user:
     display_name: ups and downs
-    always_online: false
+    always_online: true
   slash_commands:
     - command: /team
+      url: https://2dfc-98-117-240-132.ngrok-free.app/slack/events
       description: find out what team you're on
       usage_hint: "[optionally, another user]"
       should_escape: true
-oauth_config:
+    - command: /leaderboard
+      url: https://2dfc-98-117-240-132.ngrok-free.app/slack/events
+      description: view the up-vs-down leaderboard
+      should_escape: false
   scopes:
     bot:
       - app_mentions:read
