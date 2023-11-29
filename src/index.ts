@@ -141,10 +141,9 @@ app.command("/leaderboard", async ({ command, ack, respond }) => {
       type: "header",
       text: {
         type: "plain_text",
-        text: `<#${env.CHANNEL_ID}> Leaderboard - ${new Date().toLocaleString(
-          "en-us",
-          { month: "long" }
-        )} ${new Date().getFullYear()}`,
+        text: `Up vs. Down Leaderboard - ${new Date().toLocaleString("en-us", {
+          month: "long",
+        })} ${new Date().getFullYear()}`,
         emoji: true,
       },
     },
