@@ -9,6 +9,9 @@ display_information:
 
     https://github.com/mrhappyma/slack-ups-and-downs"
 features:
+  bot_user:
+    display_name: ups and downs
+    always_online: true
   app_home:
     home_tab_enabled: true
     messages_tab_enabled: false
@@ -21,6 +24,7 @@ features:
     - command: /leaderboard
       description: view the up-vs-down leaderboard
       should_escape: false
+oauth_config:
   scopes:
     bot:
       - app_mentions:read
@@ -36,11 +40,11 @@ features:
 settings:
   event_subscriptions:
     bot_events:
-      - app_home_opened
       - app_mention
       - member_joined_channel
       - message.channels
       - message.groups
+      - app_home_opened
   org_deploy_enabled: false
   socket_mode_enabled: false
   token_rotation_enabled: false
