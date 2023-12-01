@@ -89,7 +89,7 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
     });
     client.chat.postMessage({
       channel: message.channel,
-      text: `And that's a win for <!subteam^S067J3B2A0N>! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\n<!subteam^S067J3B2A0N> wins: ${upTeamWins}\nDOWN <!subteam^S0683BJL06M> team wins: ${downTeamWins}`,
+      text: `And that's a win for <!subteam^${env.UP_GROUP_ID}>! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\n<!subteam^${env.UP_GROUP_ID}> wins: ${upTeamWins}\nDOWN <!subteam^${env.DOWN_GROUP_ID}> team wins: ${downTeamWins}`,
     });
   }
   if (target == -100) {
@@ -108,7 +108,7 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
     });
     client.chat.postMessage({
       channel: message.channel,
-      text: `And that's a win for <!subteam^S0683BJL06M>! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\n<!subteam^S067J3B2A0N> wins: ${upTeamWins}\n<!subteam^S0683BJL06M>wins: ${downTeamWins}`,
+      text: `And that's a win for <!subteam^${env.DOWN_GROUP_ID}>! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\n<!subteam^${env.UP_GROUP_ID}> wins: ${upTeamWins}\n<!subteam^${env.DOWN_GROUP_ID}>wins: ${downTeamWins}`,
     });
   }
 });
