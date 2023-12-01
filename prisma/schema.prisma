@@ -20,6 +20,7 @@ model User {
   team            Team
   usedGrace       Boolean @default(false)
   countsThisMonth Int     @default(0)
+  countsTotal     Int     @default(0)
 }
 
 model Game {

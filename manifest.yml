@@ -24,6 +24,9 @@ features:
     - command: /leaderboard
       description: view the up-vs-down leaderboard
       should_escape: false
+    - command: /leaderboard-month
+      description: view the up-vs-down leaderboard for the month
+      should_escape: false
 oauth_config:
   scopes:
     bot:

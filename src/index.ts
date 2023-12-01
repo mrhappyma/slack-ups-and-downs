@@ -70,6 +70,9 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
       countsThisMonth: {
         increment: 1,
       },
+      countsTotal: {
+        increment: 1,
+      },
     },
   });
 
@@ -133,39 +136,46 @@ app.event("member_joined_channel", async ({ event }) => {
   getTeam(event.user);
 });
 
-const getTheLeadersOfTheBoard = async (userId: string) => {
+const getTheLeadersOfTheBoard = async (userId: string, month: boolean) => {
   const blocks: (bolt.Block | bolt.KnownBlock)[] = [
     {
       type: "header",
       text: {
         type: "plain_text",
-        text: `Up vs. Down Leaderboard - ${new Date().toLocaleString("en-us", {
-          month: "long",
-        })} ${new Date().getFullYear()}`,
+        text: month
+          ? `Up vs. Down Leaderboard - ${new Date().toLocaleString("en-us", {
+              month: "long",
+            })} ${new Date().getFullYear()}`
+          : "Up vs. Down Leaderboard - All Time",
         emoji: true,
       },
     },
-    {
-      type: "section",
-      fields: [
-        {
-          type: "mrkdwn",
-          text: `*UP* team wins: ${upTeamWins}`,
-        },
-        {
-          type: "mrkdwn",
-          text: `*DOWN* team wins: ${downTeamWins}`,
-        },
-      ],
-    },
-    {
-      type: "divider",
-    },
   ];
+  if (!month)
+    blocks.push(
+      {
+        type: "section",
+        fields: [
+          {
+            type: "mrkdwn",
+            text: `*UP* team wins: ${upTeamWins}`,
+          },
+          {
+            type: "mrkdwn",
+            text: `*DOWN* team wins: ${downTeamWins}`,
+          },
+        ],
+      },
+      {
+        type: "divider",
+      }
+    );
   const users = await prisma.user.findMany({
-    orderBy: {
-      countsThisMonth: "desc",
-    },
+    orderBy: month
+      ? {
+          countsThisMonth: "desc",
+        }
+      : { countsTotal: "desc" },
   });
   let pos = 0;
   let addedFetcher = false;
@@ -179,13 +189,14 @@ const getTheLeadersOfTheBoard = async (userId: string) => {
       addedFetcher = true;
     }
     if (pos == 1) bold = true;
+    const counts = month ? user.countsThisMonth : user.countsTotal;
     blocks.push({
       type: "section",
       text: {
         type: "mrkdwn",
         text: bold
-          ? `*${pos}. <@${user.id}> - ${user.countsThisMonth} for team ${user.team}*`
-          : `${pos}. <@${user.id}> - ${user.countsThisMonth} for team ${user.team}`,
+          ? `*${pos}. <@${user.id}> - ${counts} for team ${user.team}*`
+          : `${pos}. <@${user.id}> - ${counts} for team ${user.team}`,
       },
     });
   }
@@ -209,19 +220,26 @@ const getTheLeadersOfTheBoard = async (userId: string) => {
   return blocks;
 };
 
+app.command("/leaderboard-month", async ({ command, ack, respond }) => {
+  await ack();
+  const blocks = await getTheLeadersOfTheBoard(command.user_id, true);
+  return await respond({ blocks });
+});
+
 app.command("/leaderboard", async ({ command, ack, respond }) => {
   await ack();
-  const blocks = await getTheLeadersOfTheBoard(command.user_id);
+  const blocks = await getTheLeadersOfTheBoard(command.user_id, false);
   return await respond({ blocks });
 });
 
 app.event("app_home_opened", async ({ event, client }) => {
-  const blocks = await getTheLeadersOfTheBoard(event.user);
+  const month = await getTheLeadersOfTheBoard(event.user, true);
+  const total = await getTheLeadersOfTheBoard(event.user, false);
   client.views.publish({
     user_id: event.user,
     view: {
       type: "home",
-      blocks,
+      blocks: [...total, ...month],
     },
   });
 });
@@ -231,12 +249,6 @@ const resetLeaderboard = async () => {
     data: {
       countsThisMonth: 0,
     },
-  });
-  await app.client.chat.postMessage({
-    channel: env.CHANNEL_ID,
-    text: `Leaderboard reset! Happy ${new Date().toLocaleString("en-us", {
-      month: "long",
-    })}!`,
   });
 };
 Cron("0 0 1 * *", resetLeaderboard);
