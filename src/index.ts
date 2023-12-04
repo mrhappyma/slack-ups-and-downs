@@ -73,43 +73,80 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
     },
   });
 
-  if (target == 100) {
+  // if (target == 100) {
+  //   number = 0;
+  //   lastCounter = null;
+  //   upTeamWins++;
+  //   await prisma.game.update({
+  //     where: {
+  //       id,
+  //     },
+  //     data: {
+  //       number: 0,
+  //       lastCounter: null,
+  //       upTeamWins: upTeamWins + 1,
+  //     },
+  //   });
+  //   client.chat.postMessage({
+  //     channel: message.channel,
+  //     text: `And that's a win for <!subteam^${env.UP_GROUP_ID}>! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\n<!subteam^${env.UP_GROUP_ID}> wins: ${upTeamWins}\nDOWN <!subteam^${env.DOWN_GROUP_ID}> team wins: ${downTeamWins}`,
+  //   });
+  // }
+  // if (target == -100) {
+  //   number = 0;
+  //   lastCounter = null;
+  //   downTeamWins++;
+  //   await prisma.game.update({
+  //     where: {
+  //       id,
+  //     },
+  //     data: {
+  //       number: 0,
+  //       lastCounter: null,
+  //       downTeamWins: downTeamWins + 1,
+  //     },
+  //   });
+  //   const msg = await client.chat.postMessage({
+  //     channel: message.channel,
+  //     text: `And that's a win for Team Down! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\nTeam Up wins: ${upTeamWins}\nTeam Down wins: ${downTeamWins}`,
+  //   });
+  //   client.chat.update({
+  //     channel: message.channel,
+  //     ts: msg.ts!,
+  //     text: `And that's a win for <!subteam^${env.DOWN_GROUP_ID}>! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\n<!subteam^${env.UP_GROUP_ID}> wins: ${upTeamWins}\n<!subteam^${env.DOWN_GROUP_ID}>wins: ${downTeamWins}`,
+  //   });
+  // }
+  if (target == 100 || -100) {
+    const won = target == 100 ? "UP" : "DOWN";
     number = 0;
     lastCounter = null;
-    upTeamWins++;
+    won == "UP" ? upTeamWins++ : downTeamWins++;
     await prisma.game.update({
       where: {
         id,
       },
-      data: {
-        number: 0,
-        lastCounter: null,
-        upTeamWins: upTeamWins + 1,
-      },
+      data:
+        won == "UP"
+          ? {
+              number: 0,
+              lastCounter: null,
+              upTeamWins,
+            }
+          : {
+              number: 0,
+              lastCounter: null,
+              downTeamWins,
+            },
     });
-    client.chat.postMessage({
+    const msg = await client.chat.postMessage({
       channel: message.channel,
-      text: `And that's a win for <!subteam^${env.UP_GROUP_ID}>! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\n<!subteam^${env.UP_GROUP_ID}> wins: ${upTeamWins}\nDOWN <!subteam^${env.DOWN_GROUP_ID}> team wins: ${downTeamWins}`,
+      text: `And that's a win for Team ${won}! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\nTeam Up wins: ${upTeamWins}\nTeam Down wins: ${downTeamWins}`,
     });
-  }
-  if (target == -100) {
-    number = 0;
-    lastCounter = null;
-    downTeamWins++;
-    await prisma.game.update({
-      where: {
-        id,
-      },
-      data: {
-        number: 0,
-        lastCounter: null,
-        downTeamWins: downTeamWins + 1,
-      },
-    });
-    client.chat.postMessage({
-      channel: message.channel,
-      text: `And that's a win for <!subteam^${env.DOWN_GROUP_ID}>! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\n<!subteam^${env.UP_GROUP_ID}> wins: ${upTeamWins}\n<!subteam^${env.DOWN_GROUP_ID}>wins: ${downTeamWins}`,
-    });
+    // client.chat.update({
+    //   channel: message.channel,
+    //   ts: msg.ts!,
+    //   text: `And that's a win for Team ${won}! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\nTeam Up wins: ${upTeamWins}\nTeam Down wins: ${downTeamWins}`,
+    // });
   }
 });
 
@@ -268,6 +305,16 @@ const getTeam = async (uid: string, notifyOnCreate = true) => {
       downTeamMembers: team == "DOWN" ? downTeamMembers + 1 : downTeamMembers,
     },
   });
+
+  try {
+    const group = await app.client.usergroups.users.list({
+      usergroup: team == "UP" ? env.UP_GROUP_ID : env.DOWN_GROUP_ID,
+    });
+    await app.client.usergroups.users.update({
+      usergroup: team == "UP" ? env.UP_GROUP_ID : env.DOWN_GROUP_ID,
+      users: `${group.users?.join(",")},${uid}`,
+    });
+  } catch {}
 
   await prisma.user.create({
     data: {
