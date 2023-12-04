@@ -76,7 +76,7 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
     },
   });
 
-  if (target == 100 || -100) {
+  if (target > 99 || target < -99) {
     const won = target == 100 ? "UP" : "DOWN";
     number = 0;
     lastCounter = null;
@@ -270,8 +270,8 @@ const getTeam = async (uid: string, notifyOnCreate = true) => {
       id,
     },
     data: {
-      upTeamMembers: team == "UP" ? upTeamMembers + 1 : upTeamMembers,
-      downTeamMembers: team == "DOWN" ? downTeamMembers + 1 : downTeamMembers,
+      upTeamMembers,
+      downTeamMembers,
     },
   });
 
