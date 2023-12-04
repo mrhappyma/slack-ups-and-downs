@@ -73,49 +73,6 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
     },
   });
 
-  // if (target == 100) {
-  //   number = 0;
-  //   lastCounter = null;
-  //   upTeamWins++;
-  //   await prisma.game.update({
-  //     where: {
-  //       id,
-  //     },
-  //     data: {
-  //       number: 0,
-  //       lastCounter: null,
-  //       upTeamWins: upTeamWins + 1,
-  //     },
-  //   });
-  //   client.chat.postMessage({
-  //     channel: message.channel,
-  //     text: `And that's a win for <!subteam^${env.UP_GROUP_ID}>! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\n<!subteam^${env.UP_GROUP_ID}> wins: ${upTeamWins}\nDOWN <!subteam^${env.DOWN_GROUP_ID}> team wins: ${downTeamWins}`,
-  //   });
-  // }
-  // if (target == -100) {
-  //   number = 0;
-  //   lastCounter = null;
-  //   downTeamWins++;
-  //   await prisma.game.update({
-  //     where: {
-  //       id,
-  //     },
-  //     data: {
-  //       number: 0,
-  //       lastCounter: null,
-  //       downTeamWins: downTeamWins + 1,
-  //     },
-  //   });
-  //   const msg = await client.chat.postMessage({
-  //     channel: message.channel,
-  //     text: `And that's a win for Team Down! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\nTeam Up wins: ${upTeamWins}\nTeam Down wins: ${downTeamWins}`,
-  //   });
-  //   client.chat.update({
-  //     channel: message.channel,
-  //     ts: msg.ts!,
-  //     text: `And that's a win for <!subteam^${env.DOWN_GROUP_ID}>! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\n<!subteam^${env.UP_GROUP_ID}> wins: ${upTeamWins}\n<!subteam^${env.DOWN_GROUP_ID}>wins: ${downTeamWins}`,
-  //   });
-  // }
   if (target == 100 || -100) {
     const won = target == 100 ? "UP" : "DOWN";
     number = 0;
