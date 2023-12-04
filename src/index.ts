@@ -76,43 +76,37 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
     },
   });
 
-  if (target == 100) {
+  if (target == 100 || -100) {
+    const won = target == 100 ? "UP" : "DOWN";
     number = 0;
     lastCounter = null;
-    upTeamWins++;
+    won == "UP" ? upTeamWins++ : downTeamWins++;
     await prisma.game.update({
       where: {
         id,
       },
-      data: {
-        number: 0,
-        lastCounter: null,
-        upTeamWins: upTeamWins + 1,
-      },
+      data:
+        won == "UP"
+          ? {
+              number: 0,
+              lastCounter: null,
+              upTeamWins,
+            }
+          : {
+              number: 0,
+              lastCounter: null,
+              downTeamWins,
+            },
     });
-    client.chat.postMessage({
+    const msg = await client.chat.postMessage({
       channel: message.channel,
-      text: `And that's a win for team UP! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\nUP team wins: ${upTeamWins}\nDOWN team wins: ${downTeamWins}`,
+      text: `And that's a win for Team ${won}! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\nTeam Up wins: ${upTeamWins}\nTeam Down wins: ${downTeamWins}`,
     });
-  }
-  if (target == -100) {
-    number = 0;
-    lastCounter = null;
-    downTeamWins++;
-    await prisma.game.update({
-      where: {
-        id,
-      },
-      data: {
-        number: 0,
-        lastCounter: null,
-        downTeamWins: downTeamWins + 1,
-      },
-    });
-    client.chat.postMessage({
-      channel: message.channel,
-      text: `And that's a win for team DOWN! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\nUP team wins: ${upTeamWins}\nDOWN team wins: ${downTeamWins}`,
-    });
+    // client.chat.update({
+    //   channel: message.channel,
+    //   ts: msg.ts!,
+    //   text: `And that's a win for Team ${won}! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\nTeam Up wins: ${upTeamWins}\nTeam Down wins: ${downTeamWins}`,
+    // });
   }
 });
 
@@ -280,6 +274,16 @@ const getTeam = async (uid: string, notifyOnCreate = true) => {
       downTeamMembers: team == "DOWN" ? downTeamMembers + 1 : downTeamMembers,
     },
   });
+
+  try {
+    const group = await app.client.usergroups.users.list({
+      usergroup: team == "UP" ? env.UP_GROUP_ID : env.DOWN_GROUP_ID,
+    });
+    await app.client.usergroups.users.update({
+      usergroup: team == "UP" ? env.UP_GROUP_ID : env.DOWN_GROUP_ID,
+      users: `${group.users?.join(",")},${uid}`,
+    });
+  } catch {}
 
   await prisma.user.create({
     data: {

@@ -36,10 +36,11 @@ oauth_config:
       - channels:read
       - chat:write
       - commands
-      - groups:read
-      - mpim:read
-      - reactions:write
       - groups:history
+      - groups:read
+      - reactions:write
+      - usergroups:write
+      - mpim:read
 settings:
   event_subscriptions:
     bot_events:
