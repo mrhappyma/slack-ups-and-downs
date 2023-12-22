@@ -77,7 +77,7 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
   });
 
   if (target > 99 || target < -99) {
-    const won = target == 100 ? "UP" : "DOWN";
+    const won = target > 99 ? "UP" : "DOWN";
     number = 0;
     lastCounter = null;
     won == "UP" ? upTeamWins++ : downTeamWins++;
