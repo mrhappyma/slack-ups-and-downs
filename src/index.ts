@@ -119,6 +119,11 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
     //   text: `And that's a win for Team ${won}! Great job, everyone!\nThe game has been reset. The next number is 1 or -1, depending on your team.\n\nTeam Up wins: ${upTeamWins}\nTeam Down wins: ${downTeamWins}`,
     // });
   }
+  app.client.reactions.add({
+    channel: message.channel,
+    timestamp: message.ts,
+    name: "white_check_mark",
+  });
 });
 
 app.command("/team", async ({ command, ack, respond }) => {
