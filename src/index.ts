@@ -7,6 +7,16 @@ import Cron from "croner";
 const app = new App({
   token: env.WORKSPACE_BOT_TOKEN,
   signingSecret: env.SIGNING_SECRET,
+  customRoutes: [
+    {
+      path: "/",
+      method: ["GET"],
+      handler: (req, res) => {
+        res.writeHead(200);
+        res.end(`Things are going just fine at ${req.headers.host}!`);
+      },
+    },
+  ],
 });
 const prisma = new PrismaClient();
 
@@ -35,7 +45,12 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
   const num = parseInt(message.text!);
   const target = team == "UP" ? number + 1 : number - 1;
   if (message.user == lastCounter) {
-    youScrewedUp(message, say, team, "You can't count twice in a row!");
+    youScrewedUp(
+      message,
+      say,
+      team,
+      `You can't count twice in a row, <@${message.user}>!`
+    );
     return;
   }
   if (num != target) {
@@ -43,11 +58,7 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
       message,
       say,
       team,
-      "That's not the right number! You're on team " +
-        team +
-        ", so the next number should have been " +
-        target +
-        "."
+      `That's not the right number, <@${message.user}>!  You're on team ${team}, so the next number should have been ${target}.`
     );
     return;
   }
@@ -283,7 +294,9 @@ const getTeam = async (uid: string, notifyOnCreate = true) => {
       usergroup: team == "UP" ? env.UP_GROUP_ID : env.DOWN_GROUP_ID,
       users: `${group.users?.join(",")},${uid}`,
     });
-  } catch {}
+  } catch (e) {
+    console.log(e);
+  }
 
   await prisma.user.create({
     data: {
