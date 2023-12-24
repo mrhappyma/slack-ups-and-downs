@@ -124,6 +124,24 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
     timestamp: message.ts,
     name: "white_check_mark",
   });
+  setTimeout(async () => {
+    const m = await app.client.chat.getPermalink({
+      channel: message.channel,
+      message_ts: message.ts,
+    });
+    if (!m.permalink) {
+      await app.client.chat.postMessage({
+        channel: message.channel,
+        text: `Got 'em! <@${
+          message.user
+        }> deleted their message! But it doesn't count!\n\nContinuing from ${number}. The next number is ${
+          number - 1
+        } or ${
+          number + 1
+        } depending on your team. The last person to count was <@${lastCounter}>.`,
+      });
+    }
+  }, 5000);
 });
 
 app.command("/team", async ({ command, ack, respond }) => {
