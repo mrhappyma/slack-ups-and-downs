@@ -282,13 +282,19 @@ const resetLeaderboard = async () => {
 };
 Cron("0 0 1 * *", resetLeaderboard);
 
+const teamMap = new Map<string, Team>();
+
 const getTeam = async (uid: string, notifyOnCreate = true) => {
+  if (teamMap.has(uid)) return teamMap.get(uid)!;
   const user = await prisma.user.findUnique({
     where: {
       id: uid,
     },
   });
-  if (user) return user.team;
+  if (user) {
+    teamMap.set(uid, user.team);
+    return user.team;
+  }
   let team: Team;
   if (upTeamMembers > downTeamMembers) {
     team = "DOWN";
