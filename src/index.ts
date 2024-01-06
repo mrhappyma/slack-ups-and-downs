@@ -122,14 +122,15 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
   app.client.reactions.add({
     channel: message.channel,
     timestamp: message.ts,
-    name: "white_check_mark",
+    name: "tw_white_check_mark",
   });
   setTimeout(async () => {
-    const m = await app.client.chat.getPermalink({
-      channel: message.channel,
-      message_ts: message.ts,
-    });
-    if (!m.permalink) {
+    try {
+      await app.client.chat.getPermalink({
+        channel: message.channel,
+        message_ts: message.ts,
+      });
+    } catch {
       await app.client.chat.postMessage({
         channel: message.channel,
         text: `Got 'em! <@${
