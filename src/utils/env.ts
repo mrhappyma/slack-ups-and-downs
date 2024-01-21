@@ -7,5 +7,6 @@ const envSchema = z.object({
   DATABASE_URL: z.string(),
   UP_GROUP_ID: z.string(),
   DOWN_GROUP_ID: z.string(),
+  APP_TOKEN: z.string()
 });
 export default envSchema.parse(process.env);

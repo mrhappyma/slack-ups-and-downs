@@ -7,6 +7,8 @@ import Cron from "croner";
 const app = new App({
   token: env.WORKSPACE_BOT_TOKEN,
   signingSecret: env.SIGNING_SECRET,
+  appToken: env.APP_TOKEN,
+  socketMode: true,
   customRoutes: [
     {
       path: "/",
