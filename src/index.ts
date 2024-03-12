@@ -243,7 +243,7 @@ const getTheLeadersOfTheBoard = async (userId: string, month: boolean) => {
       text: {
         type: "mrkdwn",
         text: `*${users.indexOf(fetcher) + 1}. <@${fetcher.id}> - ${
-          fetcher?.countsThisMonth
+          month ? fetcher?.countsThisMonth : fetcher?.countsTotal
         } for team ${fetcher?.team}*`,
       },
     });
