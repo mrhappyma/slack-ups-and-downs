@@ -18,6 +18,15 @@ const app = new App({
         res.end(`Things are going just fine at ${req.headers.host}!`);
       },
     },
+    {
+      path: "/api/games",
+      method: ["GET"],
+      handler: async (req, res) => {
+        const games = await prisma.game.findMany();
+        res.writeHead(200);
+        res.end(JSON.stringify(games));
+      },
+    },
   ],
 });
 const prisma = new PrismaClient();
