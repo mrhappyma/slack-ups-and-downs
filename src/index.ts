@@ -60,7 +60,8 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
       message,
       say,
       team,
-      `You can't count twice in a row, <@${message.user}>!`
+      `You can't count twice in a row, <@${message.user}>!`,
+      5
     );
     return;
   }
@@ -69,7 +70,8 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
       message,
       say,
       team,
-      `That's not the right number, <@${message.user}>!  You're on team ${team}, so the next number should have been ${target}.`
+      `That's not the right number, <@${message.user}>!  You're on team ${team}, so the next number should have been ${target}.`,
+      5
     );
     return;
   }
@@ -142,16 +144,13 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
         message_ts: message.ts,
       });
     } catch {
-      await app.client.chat.postMessage({
-        channel: message.channel,
-        text: `Got 'em! <@${
-          message.user
-        }> deleted their message! But it doesn't count!\n\nContinuing from ${number}. The next number is ${
-          number - 1
-        } or ${
-          number + 1
-        } depending on your team. The last person to count was <@${lastCounter}>.`,
-      });
+      youScrewedUp(
+        message,
+        say,
+        team,
+        `Got 'em! <@${message.user}> deleted their message! `,
+        5
+      );
     }
   }, 5000);
 });
@@ -363,7 +362,8 @@ const youScrewedUp = async (
     | bolt.ThreadBroadcastMessageEvent,
   say: bolt.SayFn,
   team: Team,
-  reason: string
+  reason: string,
+  c: number
 ) => {
   app.client.reactions.add({
     channel: message.channel,
@@ -389,7 +389,7 @@ const youScrewedUp = async (
     });
     return;
   } else {
-    const newNumber = team == "UP" ? number - 5 : number + 5;
+    const newNumber = team == "UP" ? number - c : number + c;
     say({
       text: `${reason}\nAs punishment for your wrongdoing I'm moving the game 5 points in the other direction. Counting resumes from ${newNumber}, meaning the next number is ${
         newNumber - 1
