@@ -32,3 +32,11 @@ model Game {
   upTeamWins      Int     @default(0)
   downTeamWins    Int     @default(0)
 }
+
+model Banlist {
+  id              Int     @id @default(autoincrement())
+  userId          String
+  banneduntil     Int?
+  moderatorId     String?
+  banReason       String @default("No reason provided")
+}
