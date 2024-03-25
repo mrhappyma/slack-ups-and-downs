@@ -149,7 +149,7 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
         say,
         team,
         `Got 'em! <@${message.user}> deleted their message! `,
-        5
+        7
       );
     }
   }, 5000);
@@ -391,7 +391,7 @@ const youScrewedUp = async (
   } else {
     const newNumber = team == "UP" ? number - c : number + c;
     say({
-      text: `${reason}\nAs punishment for your wrongdoing I'm moving the game 5 points in the other direction. Counting resumes from ${newNumber}, meaning the next number is ${
+      text: `${reason}\nAs punishment for your wrongdoing I'm moving the game ${c} points in the other direction. Counting resumes from ${newNumber}, meaning the next number is ${
         newNumber - 1
       } or ${newNumber + 1} depending on your team.`,
     });
