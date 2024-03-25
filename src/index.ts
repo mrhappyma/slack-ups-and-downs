@@ -61,11 +61,11 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
       userId: message.user
     }
   });  
-  if (ban){//check ban
+  if (ban.bannedUntil && ban.bannedUntil < (Date.now() / 1000)){//check ban
     //send message about: baninfo, when can count and that he banned and moderator that banned
     return;
   } 
-  
+
   if (message.user == lastCounter) {
     youScrewedUp(
       message,

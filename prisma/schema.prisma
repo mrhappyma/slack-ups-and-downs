@@ -36,7 +36,7 @@ model Game {
 model Banlist {
   id              Int     @id @default(autoincrement())
   userId          String
-  banneduntil     Int?
+  bannedUntil     Int?
   moderatorId     String?
   banReason       String @default("No reason provided")
 }
