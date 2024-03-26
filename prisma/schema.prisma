@@ -21,6 +21,7 @@ model User {
   usedGrace       Boolean @default(false)
   countsThisMonth Int     @default(0)
   countsTotal     Int     @default(0)
+  numberWarnings  Int     @default(0)
 }
 
 model Game {
@@ -33,7 +34,7 @@ model Game {
   downTeamWins    Int     @default(0)
 }
 
-model Banlist {
+model Ban {
   id              Int     @id @default(autoincrement())
   userId          String
   bannedUntil     Int?

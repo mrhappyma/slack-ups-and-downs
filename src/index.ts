@@ -56,9 +56,9 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
   const num = parseInt(message.text!);
   const target = team == "UP" ? number + 1 : number - 1;
 
-  const ban = await prisma.banlist.findFirst({
+  const ban = await prisma.ban.findFirst({
     where: {
-      userId: message.user
+      userId: message.user,
     }
   });  
   if (ban.bannedUntil && ban.bannedUntil < (Date.now() / 1000)){//check ban
