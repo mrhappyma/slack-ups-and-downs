@@ -55,6 +55,17 @@ app.message(/^-?\d+(\s+.*)?/, async ({ message, say, client }) => {
   const team = await getTeam(message.user!);
   const num = parseInt(message.text!);
   const target = team == "UP" ? number + 1 : number - 1;
+
+  const ban = await prisma.ban.findFirst({
+    where: {
+      userId: message.user,
+    }
+  });  
+  if (ban.bannedUntil && ban.bannedUntil < (Date.now() / 1000)){//check ban
+    //send message about: baninfo, when can count and that he banned and moderator that banned
+    return;
+  } 
+
   if (message.user == lastCounter) {
     youScrewedUp(
       message,
