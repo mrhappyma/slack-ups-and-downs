@@ -408,4 +408,4 @@ const youScrewedUp = async (
   }
 };
 
-app.start(3000);
+app.start(env.PORT ?? 3000);
